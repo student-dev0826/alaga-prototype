@@ -3,6 +3,8 @@
 Updated: 2026-10-14 (Asia/Manila)
 
 ## Completed milestones
+- Added a separate beginner-friendly plain HTML/CSS/JavaScript remake in plain-html, preserving the React app and database. Static HTML sections, original CSS/icons/fonts, hash navigation, persistent accessibility settings and lazy Supabase account/profile/notifications code. No React runtime in its production output.
+- Plain remake production build and lint passed; eight browser tests passed covering 320/768/1440 layouts, enlarged text, keyboard skip link, preference persistence, axe AA scans, mocked auth validation, text-only notification rendering, account-specific recovery and late profile-save protection after logout. These account tests use a mocked SDK, not live email verification.
 - Exact repository student-dev0826/alaga-prototype; branch development. Preserved README history, source-audit commit decca38 and foundation commit 8a28a46.
 - Original Figma Make ZIP recovered after sign-in, inspected and migrated into one responsive app. Original icons, palette, Inter, hero, cards and navigation preserved; local reference export is ignored.
 - Foundation has lazy routes/optional location panel, reusable skeletons, error boundary, semantic navigation, keyboard focus/skip link, honest empty states and persistent accessibility preferences.

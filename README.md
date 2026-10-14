@@ -16,6 +16,8 @@ Provider records, services and slots remain empty until verified data and secure
 
 ## Local development
 
+An additional beginner-friendly version is available in [plain-html](plain-html/README.md). Its UI uses plain HTML, CSS and JavaScript with no React, TypeScript or Tailwind runtime. Run `npm run dev:plain`, or build with `npm run build:plain` and preview with `npm run preview:plain` at port 5173. `npm run test:plain` checks that version. The original React version remains available with the commands below.
+
 Use Node.js 22.12+ (verified on 22.21.0).
 
 ```sh
