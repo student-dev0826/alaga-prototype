@@ -26,6 +26,14 @@ document.querySelector('.skip-link').addEventListener('click', event => {
 // Hidden HTML sections act as pages. Hash links support Back/Forward and reloads.
 function showPage() {
   let route = location.hash.slice(1) || location.pathname.slice(1) || 'home';
+  // Email callbacks may contain auth information after # instead of a page name.
+  // Let Supabase verify it before changing or removing anything from the URL.
+  const fragment = new URLSearchParams(location.hash.slice(1));
+  const query = new URLSearchParams(location.search);
+  if (location.pathname === '/auth/callback' || query.has('code') || query.has('error') ||
+      fragment.has('access_token') || fragment.has('refresh_token') || fragment.has('error') || fragment.has('error_code')) {
+    route = 'auth/callback';
+  }
   if (route === 'main-content') route = currentPage;
   if (route === 'search') route = 'health-centers';
   if (route.startsWith('health-centers/')) route = 'facility';

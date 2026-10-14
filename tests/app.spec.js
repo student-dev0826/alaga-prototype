@@ -2,8 +2,9 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 // Only browser tests replace the backend SDK. No test sends real email or creates accounts.
-async function mockAccounts(page, signedIn = false) {
+async function mockAccounts(page, signedIn = false, recovering = false) {
   await page.addInitScript(value => { window.testSignedIn = value; }, signedIn);
+  await page.addInitScript(value => { window.testRecovering = value; }, recovering);
   await page.route('**/assets/dist-*.js', route => route.fulfill({
     contentType: 'application/javascript',
     body: `export function createClient() {
@@ -14,7 +15,10 @@ async function mockAccounts(page, signedIn = false) {
       return {
         auth: {
           onAuthStateChange(callback) { listener = callback; },
-          async getSession() { return result(); },
+          async getSession() {
+            if (window.testRecovering) listener('PASSWORD_RECOVERY', { user });
+            return result();
+          },
           async signInWithPassword() { return { error: { code: 'invalid_credentials' } }; },
           async signUp() { return result(); },
           async resetPasswordForEmail() { return { error: null }; },
@@ -75,6 +79,22 @@ test('preferences persist, categories work, and keyboard skip link works', async
   await page.goto('/#health-guide');
   await page.locator('#guide-query').fill('does not exist');
   await expect(page.locator('#guide-search-status')).toContainText('No categories match');
+});
+
+test('expired email callback shows recovery guidance instead of page not found', async ({ page }) => {
+  await mockAccounts(page, true);
+  await page.goto('/auth/callback#error=access_denied&error_code=otp_expired');
+  await expect(page.locator('#callback-status')).toContainText('may have expired');
+  await expect(page).toHaveURL('http://127.0.0.1:5173/#auth/callback');
+  await expect(page.locator('[data-page="not-found"]')).toBeHidden();
+  await expect(page.locator('#password-form')).toBeHidden();
+});
+
+test('verified recovery callback opens password form and removes callback parameters', async ({ page }) => {
+  await mockAccounts(page, true, true);
+  await page.goto('/auth/callback?code=demo-code-for-mocked-sdk#type=recovery');
+  await expect(page.locator('#password-form')).toBeVisible();
+  await expect(page).toHaveURL('http://127.0.0.1:5173/#auth/update-password');
 });
 
 test('public and signed-out pages have no detected axe AA violations', async ({ page }) => {

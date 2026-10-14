@@ -3,6 +3,7 @@
 Updated: 2026-10-14 (Asia/Manila)
 
 ## Current application
+- Live checks reported by the user: signup email/confirmation, profile loading, profile save after refresh, and sign-out/sign-in with saved name all worked. Recovery email redirected to Page not found; fixed callback routing so auth fragments reach verification, provider errors show a fresh-link option, and existing sessions cannot mask failed links. Lint/build and three targeted mocked browser tests passed. Live recovery completion and two-account cloud isolation remain pending.
 - Plain HTML/CSS/JavaScript is the only current implementation, promoted to the repository root at the user's request. Removed duplicate React source, its tests/tooling and dependencies; preserved database migrations, environment files and screenshots. Main uses npm run build with dist output. Clean installation, lint, production build, six PostgreSQL/RLS tests and eight browser tests passed after promotion.
 - Prior React milestones below describe historical work retained in Git, not a second current application.
 
@@ -29,7 +30,7 @@ Updated: 2026-10-14 (Asia/Manila)
 - No Vercel deployment. Production domain, SMTP and auth redirects are pending; local Site URL is for development.
 
 ## Next work
-1. Live resident signup, email confirmation, recovery, login/logout and two-account cloud RLS verification using authorized test accounts.
+1. Finish live recovery/password-change verification and two-account cloud RLS checks using authorized test accounts. Signup, confirmation, profile persistence and login/logout have user-reported success.
 2. Deterministic verified-service/facility search with pagination/filtering and real availability.
 3. Protected transactional booking/cancellation/rescheduling with slot locking/capacity constraints, approved policies and Asia/Manila rules.
 4. Verified provider/scheduling data, persistent supporting features and confirmed attachment requirements.

@@ -9,6 +9,9 @@ let request;
 let notificationsPage = 0;
 let profileCache;
 const notificationsCache = new Map();
+// Keep only whether the provider reported a failure, never its tokens or message.
+const callbackFailed = [new URLSearchParams(location.search), new URLSearchParams(location.hash.slice(1))]
+  .some(parameters => parameters.has('error') || parameters.has('error_code'));
 
 export function startAuthentication() {
   starting ??= initialize();
@@ -101,7 +104,7 @@ export function showResidentPage(page) {
   if (page === 'auth/callback') {
     if (status === 'loading') return;
     history.replaceState(null, '', '/#auth/callback');
-    if (resident) location.hash = recoverySession ? 'auth/update-password' : 'profile';
+    if (resident && !callbackFailed && status === 'ready') location.hash = recoverySession ? 'auth/update-password' : 'profile';
     else document.getElementById('callback-status').textContent = 'This link could not be verified. It may have expired or was opened in another browser.';
   }
   if (!resident || status !== 'ready') return;
