@@ -1,0 +1,13 @@
+import { readFile, writeFile } from 'node:fs/promises';
+import { loadEnv } from 'vite';
+const env = { ...loadEnv('production', process.cwd(), 'VITE_'), ...process.env };
+const input = env.VITE_SUPABASE_URL?.trim();
+if (!input) throw new Error('Add the public Supabase URL to .env.local before configuring deployment headers.');
+const url = new URL(input);
+if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || url.pathname !== '/') throw new Error('Deployment requires a clean HTTPS Supabase project URL.');
+const config = JSON.parse(await readFile('vercel.json', 'utf8'));
+const header = config.headers.flatMap(rule => rule.headers).find(value => value.key === 'Content-Security-Policy');
+if (!header) throw new Error('Content security policy header is missing.');
+header.value = header.value.replace(/connect-src[^;]*/, `connect-src 'self' ${url.origin}`);
+await writeFile('vercel.json', `${JSON.stringify(config, null, 2)}\n`);
+console.log('Configured deployment connections for the specified project. No keys were written.');
