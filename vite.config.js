@@ -1,8 +1,8 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vitest/config';
+import { loadEnv } from 'vite';
 import { fileURLToPath } from 'node:url';
 
-const projectFolder = fileURLToPath(new URL('../', import.meta.url));
-const plainFolder = fileURLToPath(new URL('./', import.meta.url));
+const projectFolder = fileURLToPath(new URL('./', import.meta.url));
 
 export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, projectFolder, 'VITE_'), ...process.env };
@@ -21,10 +21,11 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
-    root: plainFolder,
+    root: projectFolder,
     envDir: projectFolder,
     server: { host: '127.0.0.1', port: 5173, strictPort: true },
     preview: { host: '127.0.0.1', port: 5173, strictPort: true },
-    build: { outDir: '../plain-dist', emptyOutDir: true },
+    build: { outDir: 'dist', emptyOutDir: true },
+    test: { environment: 'node', include: ['tests/**/*.test.js'] },
   };
 });

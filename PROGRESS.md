@@ -2,6 +2,10 @@
 
 Updated: 2026-10-14 (Asia/Manila)
 
+## Current application
+- Plain HTML/CSS/JavaScript is the only current implementation, promoted to the repository root at the user's request. Removed duplicate React source, its tests/tooling and dependencies; preserved database migrations, environment files and screenshots. Main uses npm run build with dist output. Clean installation, lint, production build, six PostgreSQL/RLS tests and eight browser tests passed after promotion.
+- Prior React milestones below describe historical work retained in Git, not a second current application.
+
 ## Completed milestones
 - Added a separate beginner-friendly plain HTML/CSS/JavaScript remake in plain-html, preserving the React app and database. Static HTML sections, original CSS/icons/fonts, hash navigation, persistent accessibility settings and lazy Supabase account/profile/notifications code. No React runtime in its production output.
 - Plain remake production build and lint passed; eight browser tests passed covering 320/768/1440 layouts, enlarged text, keyboard skip link, preference persistence, axe AA scans, mocked auth validation, text-only notification rendering, account-specific recovery and late profile-save protection after logout. These account tests use a mocked SDK, not live email verification.

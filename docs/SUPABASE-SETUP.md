@@ -15,7 +15,7 @@ With explicit user approval, saved development Site URL `http://127.0.0.1:4173` 
 3. Enable email/password auth with email confirmation, minimum password length 12 and appropriate rate limits. Set the production Site URL. Allow exact `/auth/callback` redirects for the authorized production domain and local origins you use (`http://127.0.0.1:5173/auth/callback` and `http://127.0.0.1:4173/auth/callback`). PKCE links must open in the browser where requested. Configure production SMTP before relying on delivery.
 4. Run `npm run configure:headers` after adding the URL. It permits only that exact HTTPS backend origin in Vercel CSP and writes no keys. Commit the public-origin change before deploying.
 5. Restart development or rebuild the preview after editing environment values; public Vite variables are embedded at build time.
-6. Generate authoritative database types with the Supabase CLI after applying the migration. Replace `src/lib/supabase/database.types.ts`; current types are manually schema-aligned, not cloud-generated.
+6. Keep JavaScript queries aligned with the versioned database schema. The current plain JavaScript app does not require generated TypeScript database types.
 
 ## Verification
 
@@ -33,7 +33,7 @@ Auth tests explicitly mock provider responses to verify validation, rejected log
 ## Security boundaries and next phase
 
 - Private data is owner-only. Clients cannot verify facilities or create/alter slots/appointments. Updates are limited to profile display name, presentation preferences and notification read state. Notification read timestamps are normalized by the server.
-- Supabase owns session persistence/refresh; passwords are never manually stored. SDK imports are dynamic. Both the build and runtime reject privileged browser keys; the build guard was tested with a synthetic secret key. Timeouts and abortable queries bound loading. Private cache keys include resident ID; caches clear on account changes/logout.
+- Supabase owns session persistence/refresh; passwords are never manually stored. SDK imports are dynamic. The production build rejects privileged browser keys; the build guard was tested with a synthetic secret key. Timeouts and abortable queries bound loading. Private cache keys include resident ID; caches clear on account changes/logout.
 - Callback codes are removed from browser history after initialization. Errors are sanitized; patient details are not logged or placed in URLs.
 - Trigger functions use an unexposed `private` schema, explicit grants and pinned search paths. Do not expose this schema through the Data API.
 - Transactional booking must validate/lock slots, maintain capacity and unique references, and enforce approved cancellation/rescheduling policies. Current constraints are groundwork, not a complete concurrency solution; client booking writes are denied.

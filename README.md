@@ -1,42 +1,47 @@
-# alaga-prototype
-HCI project
 # ALAGA
-Accessible Local Appointment and Guide App
 
-A healthcare service discovery and appointment
-scheduling website for residents in the Philippines.
+Accessible Local Appointment and Guide App — HCI project for residents in the Philippines.
 
-Built with React, TypeScript, Supabase, and Vercel.
+The application uses **plain HTML, CSS and JavaScript**, preserving the original ALAGA Figma Make design. Supabase handles resident accounts and private profile/notification data. Vite provides local development and production bundling; the website has no React, TypeScript or Tailwind runtime.
 
-## Current milestone
+## Source files
 
-The responsive React + TypeScript + Vite foundation is implemented from the original ALAGA Figma Make source. It uses shared routes, the source icons/palette/card patterns, Inter fonts, desktop sidebar and mobile navigation. Supabase authentication and private profile/notification access are implemented. The versioned schema/RLS migration is applied to the authorized cloud project; live email flows remain to be verified. See [Supabase setup](docs/SUPABASE-SETUP.md).
+- `index.html`: page sections, navigation and accessible forms.
+- `styles.css`: ALAGA colors, typography and responsive layouts.
+- `app.js`: navigation, search interface, guide categories and saved accessibility settings.
+- `auth.js`: lazy-loaded Supabase accounts, profiles and notifications.
+- `icons.js`: original SVG icons.
+- `supabase/migrations/`: versioned database schema and ownership policies.
 
-Provider records, services and slots remain empty until verified data and secure scheduling are connected. Profiles and notifications are gated by resident sign-in. No bookings are simulated or confirmed. Health Guide categories are preserved; prototype medical articles are not published. See [source audit](docs/SOURCE-AUDIT.md) and [progress](PROGRESS.md).
+## Run locally
 
-## Local development
-
-An additional beginner-friendly version is available in [plain-html](plain-html/README.md). Its UI uses plain HTML, CSS and JavaScript with no React, TypeScript or Tailwind runtime. Run `npm run dev:plain`, or build with `npm run build:plain` and preview with `npm run preview:plain` at port 5173. `npm run test:plain` checks that version. The original React version remains available with the commands below.
-
-Use Node.js 22.12+ (verified on 22.21.0).
+Use Node.js 22.12 or newer. From the repository root:
 
 ```sh
 npm ci
 npm run dev
 ```
 
+Open http://127.0.0.1:5173. Copy `.env.example` to `.env.local` and supply only the public Supabase URL and publishable/anon key. Never supply a service-role key. Existing local configuration is preserved. Use an HTTP server rather than double-clicking the source file: modules and authentication redirects require an origin.
+
 ```sh
 npm run lint
 npm test
 npm run build
-npx playwright install chromium
 npm run test:e2e
+npm run preview
 ```
 
-The production build includes TypeScript checking. Playwright runs against the production preview, including keyboard search, nested routes, mobile/tablet/desktop layouts, enlarged text, preference persistence and axe checks. Automated checks are not a substitute for a full manual screen-reader audit.
+Production files are generated in `dist`. Hash navigation supports reloads and Back/Forward. Healthcare queries remain in memory; backend text uses `textContent`. Account code loads only on private/account pages. Private requests and caches are isolated by resident and cleared after sign-out.
 
-## Vercel preparation
+## Current scope
 
-Import this exact repository into the authorized Vercel account. Use Vite, `npm run build`, and `dist`. Set the appropriate deployment branch; current implementation work is on `development`. `vercel.json` supplies SPA fallback and security headers. No deployment is claimed.
+Responsive navigation, search interface, Health Guide categories, accessibility settings, resident authentication, private profiles and notifications are implemented. Database schema/RLS is applied to the authorized Supabase project. Verified provider records, service matching, slots, transactional booking and reviewed medical articles remain pending; there are no simulated appointments. Live email flows and manual screen-reader verification are pending.
 
-`.env.example` documents the public Supabase variables. Keep local secrets out of Git. Follow the Supabase setup guide to apply migrations, configure approved redirects and run `npm run configure:headers` for the exact project endpoint before deployment. Geolocation remains disabled until reliable coordinates and a user-initiated location workflow exist. Never expose a service-role key in browser code.
+Browser tests cover responsive layouts, keyboard navigation, enlarged text, preference persistence, axe AA scans and mocked account privacy. Database tests execute the migration and RLS against local PostgreSQL. Mocked account checks are not live email verification. See [progress](PROGRESS.md), [source audit](docs/SOURCE-AUDIT.md) and [Supabase setup](docs/SUPABASE-SETUP.md).
+
+## Vercel
+
+Use this exact repository, branch `main`, build command `npm run build`, and output directory `dist`. `vercel.json` supplies SPA fallback and security headers. Configure public environment values and approved production authentication redirects before launch; run `npm run configure:headers` if the backend endpoint changes. No deployment is claimed.
+
+The previous React implementation was removed from the current files at the user's request; its history remains recoverable in Git.

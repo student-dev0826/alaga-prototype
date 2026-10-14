@@ -2,7 +2,7 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
-let db: PGlite;
+let db;
 const alice = '00000000-0000-4000-8000-000000000001';
 const bob = '00000000-0000-4000-8000-000000000002';
 const facility = '00000000-0000-4000-8000-000000000010';
@@ -30,7 +30,7 @@ beforeAll(async () => {
 }, 30_000);
 afterAll(async () => { await db?.close(); });
 beforeEach(async () => { await db.exec(`reset role; select set_config('request.jwt.claim.sub', '${alice}', false);`); });
-async function rows(sql: string) { return (await db.query(sql)).rows; }
+async function rows(sql) { return (await db.query(sql)).rows; }
 describe('actual PostgreSQL migration and RLS behavior', () => {
   it('creates resident records for existing and new auth users', async () => {
     expect(await rows('select id from public.profiles')).toHaveLength(2);
@@ -61,7 +61,7 @@ describe('actual PostgreSQL migration and RLS behavior', () => {
     await expect(db.query(`update public.profiles set id='${bob}'`)).rejects.toMatchObject({ code: '42501' });
     await expect(db.query("update public.profiles set updated_at='2000-01-01'")).rejects.toMatchObject({ code: '42501' });
     await expect(db.query("update public.notifications set message='tampered'")).rejects.toMatchObject({ code: '42501' });
-    const read = await db.query<{ valid: boolean }>("update public.notifications set read_at='2099-01-01' returning read_at <= now() as valid");
+    const read = await db.query("update public.notifications set read_at='2099-01-01' returning read_at <= now() as valid");
     expect(read.rows).toEqual([{ valid: true }]);
   });
   it('publishes only verified facilities, verified relationships and reviewed articles', async () => {
@@ -83,3 +83,4 @@ describe('actual PostgreSQL migration and RLS behavior', () => {
     await expect(db.query("insert into public.health_articles(category_id,title,body,published_at) values ('c1','DEMO Invalid','DEMO',now())")).rejects.toMatchObject({ code: '23514' });
   });
 });
+

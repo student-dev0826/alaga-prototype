@@ -1,10 +1,7 @@
 import js from '@eslint/js';
-import ts from 'typescript-eslint';
-import hooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
-export default ts.config(
-  { ignores: ['dist/**', 'figma-source/**', 'node_modules/**'] },
-  js.configs.recommended, ...ts.configs.recommended,
-  { files: ['**/*.{ts,tsx,js,mjs}'], languageOptions: { globals: { ...globals.browser, ...globals.node } } },
-  { files: ['src/**/*.{ts,tsx}'], plugins: { 'react-hooks': hooks }, rules: { ...hooks.configs.recommended.rules } },
-);
+export default [
+  { ignores: ['dist/**', 'plain-dist/**', 'figma-source/**', 'node_modules/**', 'artifacts/**', 'test-results/**', 'playwright-report/**'] },
+  js.configs.recommended,
+  { files: ['**/*.{js,mjs}'], languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+];
