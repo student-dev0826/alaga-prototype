@@ -3,6 +3,7 @@
 Updated: 2026-10-14 (Asia/Manila)
 
 ## Current application
+- Cleanup milestone: pruned 41 unused installed packages and removed their lockfile entries; all remaining direct packages are used. Cached static page elements, removed duplicate search navigation/profile reads, avoided rebuilding unchanged auth UI and prevented same-account token refresh from overwriting unsaved profile edits. Corrected email-limit guidance. Lint/build and 12 browser checks passed; application remains plain HTML/CSS/JavaScript with lazy account code.
 - Live checks reported by the user: signup email/confirmation, profile loading, profile save after refresh, and sign-out/sign-in with saved name all worked. Recovery email redirected to Page not found; fixed callback routing so auth fragments reach verification, provider errors show a fresh-link option, and existing sessions cannot mask failed links. Lint/build and three targeted mocked browser tests passed. Live recovery completion and two-account cloud isolation remain pending.
 - Plain HTML/CSS/JavaScript is the only current implementation, promoted to the repository root at the user's request. Removed duplicate React source, its tests/tooling and dependencies; preserved database migrations, environment files and screenshots. Main uses npm run build with dist output. Clean installation, lint, production build, six PostgreSQL/RLS tests and eight browser tests passed after promotion.
 - Prior React milestones below describe historical work retained in Git, not a second current application.
@@ -26,7 +27,8 @@ Updated: 2026-10-14 (Asia/Manila)
 - Direct client slot/appointment writes are denied. Transactional booking, cancellation/rescheduling policies, database-backed search and history remain the next phase.
 - No attachment/upload requirement found in actual source/specifications; storage remains deferred.
 - Supabase migration was manually applied, not registered in the CLI ledger. Mark version 202610140001 applied with the authorized CLI repair workflow before a later db push; do not re-run the table-creation SQL. See docs/SUPABASE-SETUP.md.
-- Database TypeScript definitions are schema-aligned manually; cloud type generation is pending.
+- The plain JavaScript app uses the versioned SQL schema; obsolete TypeScript definitions were removed with the React implementation.
+- Live recovery is currently blocked by the email sending limit; SMTP setup or a reset of the provider's quota is needed before retrying. No rate-limit settings were weakened.
 - No Vercel deployment. Production domain, SMTP and auth redirects are pending; local Site URL is for development.
 
 ## Next work

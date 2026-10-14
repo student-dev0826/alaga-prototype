@@ -21,7 +21,7 @@ async function mockAccounts(page, signedIn = false, recovering = false) {
           },
           async signInWithPassword() { return { error: { code: 'invalid_credentials' } }; },
           async signUp() { return result(); },
-          async resetPasswordForEmail() { return { error: null }; },
+          async resetPasswordForEmail() { return { error: window.testEmailLimit ? { code: 'over_email_send_rate_limit' } : null }; },
           async updateUser() { return { error: null }; },
           async signOut() { window.testAuthEvent('SIGNED_OUT', null); return { error: null }; },
         },
@@ -32,6 +32,7 @@ async function mockAccounts(page, signedIn = false, recovering = false) {
             range() { return query; }, abortSignal() { return query; },
             update(value) { change = value; return query; },
             async single() {
+              if (table === 'profiles' && !change) window.profileReads = (window.profileReads || 0) + 1;
               if (window.delayProfileSave && change) await new Promise(resolve => { window.finishProfileSave = resolve; });
               return { data: { id: 'demo-resident', display_name: change?.display_name || 'DEMO Resident' }, error: null };
             },
@@ -79,6 +80,27 @@ test('preferences persist, categories work, and keyboard skip link works', async
   await page.goto('/#health-guide');
   await page.locator('#guide-query').fill('does not exist');
   await expect(page.locator('#guide-search-status')).toContainText('No categories match');
+});
+
+test('session refresh preserves unsaved profile edits and avoids duplicate reads', async ({ page }) => {
+  await mockAccounts(page, true);
+  await page.goto('/#profile');
+  await expect(page.locator('#display-name')).toHaveValue('DEMO Resident');
+  expect(await page.evaluate(() => window.profileReads)).toBe(1);
+  await page.locator('#display-name').fill('Unsaved DEMO name');
+  await page.evaluate(() => window.testAuthEvent('TOKEN_REFRESHED', { id: 'demo-resident', email: 'demo@example.test' }));
+  await expect(page.locator('#display-name')).toHaveValue('Unsaved DEMO name');
+  expect(await page.evaluate(() => window.profileReads)).toBe(1);
+});
+
+test('email throttling explains the limit without promising a short wait', async ({ page }) => {
+  await mockAccounts(page);
+  await page.goto('/#auth/recover');
+  await page.evaluate(() => { window.testEmailLimit = true; });
+  await page.locator('#recover-email').fill('demo@example.test');
+  await page.locator('#recover-form button').click();
+  await expect(page.locator('#recover-form [data-form-error]')).toContainText('Wait for the email limit to reset');
+  await expect(page.locator('#recover-form [data-form-message]')).toBeEmpty();
 });
 
 test('expired email callback shows recovery guidance instead of page not found', async ({ page }) => {
