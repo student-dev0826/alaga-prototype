@@ -5,6 +5,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Skeleton from './components/Skeleton';
 import PreferencesProvider from './features/accessibility/Preferences';
 import SearchProvider from './features/search/SearchContext';
+import AuthProvider from './features/auth/AuthProvider';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
 
 const Home = lazy(() => import('./routes/Home'));
 const Directory = lazy(() => import('./routes/Directory'));
@@ -17,9 +20,11 @@ const Notifications = lazy(() => import('./routes/Notifications'));
 const Profile = lazy(() => import('./routes/Profile'));
 const Help = lazy(() => import('./routes/Help'));
 const NotFound = lazy(() => import('./routes/NotFound'));
+const Auth = lazy(() => import('./routes/Auth'));
+const AuthCallback = lazy(() => import('./routes/AuthCallback'));
 
 export default function App() {
-  return <ErrorBoundary><PreferencesProvider><BrowserRouter><SearchProvider><Shell>
+  return <ErrorBoundary><QueryClientProvider client={queryClient}><AuthProvider><PreferencesProvider><BrowserRouter><SearchProvider><Shell>
     <Suspense fallback={<Skeleton kind="page" />}>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -36,8 +41,14 @@ export default function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/accessibility" element={<Profile accessibilityOnly />} />
         <Route path="/help" element={<Help />} />
+        <Route path="/auth/login" element={<Auth mode="login" />} />
+        <Route path="/auth/register" element={<Auth mode="register" />} />
+        <Route path="/auth/recover" element={<Auth mode="recover" />} />
+        <Route path="/auth/update-password" element={<Auth mode="update-password" />} />
+        <Route path="/auth/password-updated" element={<Auth mode="password-updated" />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
-  </Shell></SearchProvider></BrowserRouter></PreferencesProvider></ErrorBoundary>;
+  </Shell></SearchProvider></BrowserRouter></PreferencesProvider></AuthProvider></QueryClientProvider></ErrorBoundary>;
 }

@@ -2,28 +2,29 @@
 
 Updated: 2026-10-14 (Asia/Manila)
 
-## Completed
-- Verified/cloned student-dev0826/alaga-prototype; preserved README commit 08c80b0. Work is on development.
-- Retrieved original Figma Make ZIP after the user signed in. Source audit complete; see docs/SOURCE-AUDIT.md. Export reference remains local in ignored figma-source/.
-- Implemented React 19, strict TypeScript, Vite 8, Tailwind 4 and React Router foundation. Preserved source palette, original icons, self-hosted Inter, hero, navigation and card/category patterns in one responsive app.
-- Lazy route modules, optional lazy location panel, error boundary, reusable skeleton variants, labeled search, query preserved in memory, keyboard focus/skip link, honest empty states, and persistent accessibility preferences.
-- Added environment example, Git ignore rules, Vercel SPA fallback/security headers and setup/deployment instructions.
-- TypeScript/production build and lint passed. Four unit tests passed. Seven Playwright production-preview tests passed, including 320/768/1440px layouts, keyboard search, nested routes, 200% text reflow, reduced motion and preference persistence.
-- Axe scans found no WCAG AA violations on tested foundation pages. Visually reviewed mobile/desktop screenshots. Full manual assistive-technology testing remains pending.
-- Fixed browser-test findings: navigation overlap at tablet size and mobile label overflow at 200% text.
-- Production entry JavaScript is about 84.4 KB gzipped; route chunks are separate, CSS about 5.1 KB gzipped. No manual chunks or Figma preview plugins required.
+## Completed milestones
+- Exact repository student-dev0826/alaga-prototype; branch development. Preserved README history, source-audit commit decca38 and foundation commit 8a28a46.
+- Original Figma Make ZIP recovered after sign-in, inspected and migrated into one responsive app. Original icons, palette, Inter, hero, cards and navigation preserved; local reference export is ignored.
+- Foundation has lazy routes/optional location panel, reusable skeletons, error boundary, semantic navigation, keyboard focus/skip link, honest empty states and persistent accessibility preferences.
+- Supabase public values loaded from ignored .env.local (copied from the user's .env.local.example, which remains preserved). No credential values committed or logged.
+- Implemented lazy Supabase client, PKCE registration/login/recovery/logout, private profile read/edit, paginated private notifications, validation with React Hook Form/Zod, and TanStack Query caching with resident isolation.
+- Applied 202610140001_foundation.sql through the authenticated SQL Editor to project hvfmtimijtvxwxlpaknj after confirming no public tables existed. Verified nine cloud tables with RLS/policies. Public facilities API returns HTTP 200/zero records; anonymous private-profile reads are denied.
+- User approved development Site URL http://127.0.0.1:4173 and exact /auth/callback redirects for ports 4173 and 5173; saved and verified. Email provider/confirmation enabled; saved server password minimum 12 and recent-session secure password changes.
+- Vercel CSP permits only the exact backend origin. Build-time and runtime guards reject privileged browser keys; a synthetic secret-key build was correctly refused.
+- TypeScript/build/lint passed; 21 unit/auth/cache/PostgreSQL tests and seven browser tests passed. Browser checks include 320/768/1440px layouts, keyboard use, direct routes, 200% text reflow, reduced motion, persistent preferences and axe scans with no detected AA violations on tested pages.
+- Fixed a late-profile-save cache edge case after logout. Manual screen-reader audit remains pending. Auth mock tests and local PostgreSQL tests are not claimed as live hosted email/identity verification.
 
-## Decisions and limitations
-- No Supabase integration or Vercel deployment yet. Foundation build verification precedes backend work.
-- No verified facility/service/slot data: do not publish prototype providers or fake availability. Booking is unavailable and no patient data is collected.
-- Preserved Health Guide category metadata; excluded unreviewed prototype medical articles.
-- No attachment/upload implementation or requirement found in actual source/specifications. Confirm requirements before adding private storage.
-- Supabase schema, RLS, authentication, secure search, transactional booking/cancellation/rescheduling and persistent private supporting features remain pending.
-- Public healthcare search text stays out of URLs/persistent storage. Guide category URLs carry only category IDs.
+## Decisions / limits
+- No verified production providers, facility-service relationships, slots or medical articles are inserted. No seed records or simulated booking success.
+- Direct client slot/appointment writes are denied. Transactional booking, cancellation/rescheduling policies, database-backed search and history remain the next phase.
+- No attachment/upload requirement found in actual source/specifications; storage remains deferred.
+- Supabase migration was manually applied, not registered in the CLI ledger. Mark version 202610140001 applied with the authorized CLI repair workflow before a later db push; do not re-run the table-creation SQL. See docs/SUPABASE-SETUP.md.
+- Database TypeScript definitions are schema-aligned manually; cloud type generation is pending.
+- No Vercel deployment. Production domain, SMTP and auth redirects are pending; local Site URL is for development.
 
-## Next milestone / required inputs
-1. Supabase project URL/public publishable key and authorized migration access; never browser service-role credentials.
-2. Verified facilities, facility-service relationships and supported scheduling data/policies.
-3. Implement versioned migrations and least-privilege RLS, Auth, deterministic database-backed service/facility matching and transaction-safe booking with Asia/Manila rules.
-4. Validate database/RLS and critical resident flows; complete manual accessibility/security/performance review.
-5. Vercel project access, approved environment/redirect configuration and deployment verification.
+## Next work
+1. Live resident signup, email confirmation, recovery, login/logout and two-account cloud RLS verification using authorized test accounts.
+2. Deterministic verified-service/facility search with pagination/filtering and real availability.
+3. Protected transactional booking/cancellation/rescheduling with slot locking/capacity constraints, approved policies and Asia/Manila rules.
+4. Verified provider/scheduling data, persistent supporting features and confirmed attachment requirements.
+5. Manual accessibility/security/performance checks and authorized Vercel deployment verification.

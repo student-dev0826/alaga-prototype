@@ -20,7 +20,7 @@ for (const width of [320, 768, 1440]) {
   });
 }
 test('direct routes, privacy, booking and keyboard skip link', async ({ page }) => {
-  for (const path of ['/health-centers/example', '/appointments/example', '/book', '/health-guide/example', '/notifications', '/services', '/help', '/missing']) {
+  for (const path of ['/health-centers/example', '/appointments/example', '/book', '/health-guide/example', '/notifications', '/services', '/help', '/missing', '/auth/login', '/auth/register', '/auth/recover', '/auth/callback', '/auth/update-password']) {
     await page.goto(path);
     await expect(page.locator('main h1')).toBeVisible();
     await expect(page.getByText('Maria Santos')).toHaveCount(0);
@@ -51,7 +51,7 @@ test('preferences persist with enlarged text and reduced motion', async ({ page 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 test('all foundation pages have no detected WCAG AA violations', async ({ page }) => {
-  for (const path of ['/', '/appointments', '/health-guide', '/profile', '/help', '/book', '/notifications', '/health-centers', '/services']) {
+  for (const path of ['/', '/appointments', '/health-guide', '/profile', '/help', '/book', '/notifications', '/health-centers', '/services', '/auth/login', '/auth/register', '/auth/recover']) {
     await page.goto(path); await expect(page.locator('main h1')).toBeVisible();
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
     expect(results.violations, path).toEqual([]);

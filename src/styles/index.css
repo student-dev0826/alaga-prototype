@@ -147,6 +147,14 @@ input::placeholder { color: #6b7280; opacity: 1; }
 .profile-grid > :only-child { grid-column: 1/-1; max-width: 48rem; width: 100%; }
 .field-label { display: block; font-weight: 600; margin-bottom: .5rem; }
 .input { display: block; width: 100%; border: 1px solid #6b7280; border-radius: .75rem; padding: .75rem; background: #fff; color: #111827; }
+.auth-panel { max-width: 38rem; margin: 0 auto; }
+.auth-form { width: 100%; }
+.auth-links { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.25rem; }
+.auth-links a { display: inline-flex; align-items: center; min-height: 44px; }
+.field-error { color: #991b1b; margin: .4rem 0 1rem; min-height: 1rem; }
+.form-error { color: #991b1b; }
+.form-message { color: #166534; }
+button:disabled { opacity: .7; }
 .preference-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #e5e7eb; padding: 1rem 0; cursor: pointer; }
 details { border: 1px solid #d1d5db; border-radius: .75rem; padding: .5rem 1rem; }
 summary { font-weight: 600; padding: .5rem 0; }

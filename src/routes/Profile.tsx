@@ -2,12 +2,14 @@ import PageTitle from '../components/PageTitle';
 import { Link } from 'react-router-dom';
 import { UserIcon } from '../components/icons';
 import { usePreferences, defaultPreferences, type Preferences } from '../features/accessibility/Preferences';
+import ResidentGate from '../features/auth/ResidentGate';
+import ResidentProfile from '../features/profile/ResidentProfile';
 export default function Profile({ accessibilityOnly = false }: { accessibilityOnly?: boolean }) {
   const { preferences, update } = usePreferences();
   return <div className="page"><PageTitle>{accessibilityOnly ? 'Accessibility Settings' : 'Resident Profile'}</PageTitle>
     <div className="profile-grid">
-      {!accessibilityOnly && <section className="panel"><div className="tile-icon green"><UserIcon size={28} /></div><h2 className="mt-4 mb-3">Welcome, resident</h2>
-        <p className="muted">Sign-in and private profile storage are not yet connected. Your personal information is not being collected.</p>
+      {!accessibilityOnly && <section className="panel"><div className="tile-icon green"><UserIcon size={28} /></div>
+        <ResidentGate><ResidentProfile /></ResidentGate>
         <Link to="/help" className="button secondary mt-5">Help & Support</Link>
       </section>}
       <section className="panel"><h2 className="mb-4">Accessibility Preferences</h2><p className="muted mb-6">Choose what makes ALAGA easier to read. These settings are saved in this browser when storage is available.</p>
