@@ -3,44 +3,27 @@
 Updated: 2026-10-14 (Asia/Manila)
 
 ## Completed
-- Cloned the exact repository: https://github.com/student-dev0826/alaga-prototype.
-- Verified origin, main, and existing commit 08c80b0 (Create README.md). The repository contains only README.md; preserve its history.
-- Created the development branch.
-- Requested Figma Make context for Xi3g7PsyRfjbYTy8C0IscE. Received a source manifest, but resource reads returned Unknown resource.
-- Opened the original Make preview. Project controls prompt for Figma sign-up; source export is unavailable in the current browser session.
+- Verified/cloned student-dev0826/alaga-prototype; preserved README commit 08c80b0. Work is on development.
+- Retrieved original Figma Make ZIP after the user signed in. Source audit complete; see docs/SOURCE-AUDIT.md. Export reference remains local in ignored figma-source/.
+- Implemented React 19, strict TypeScript, Vite 8, Tailwind 4 and React Router foundation. Preserved source palette, original icons, self-hosted Inter, hero, navigation and card/category patterns in one responsive app.
+- Lazy route modules, optional lazy location panel, error boundary, reusable skeleton variants, labeled search, query preserved in memory, keyboard focus/skip link, honest empty states, and persistent accessibility preferences.
+- Added environment example, Git ignore rules, Vercel SPA fallback/security headers and setup/deployment instructions.
+- TypeScript/production build and lint passed. Four unit tests passed. Seven Playwright production-preview tests passed, including 320/768/1440px layouts, keyboard search, nested routes, 200% text reflow, reduced motion and preference persistence.
+- Axe scans found no WCAG AA violations on tested foundation pages. Visually reviewed mobile/desktop screenshots. Full manual assistive-technology testing remains pending.
+- Fixed browser-test findings: navigation overlap at tablet size and mobile label overflow at 200% text.
+- Production entry JavaScript is about 84.4 KB gzipped; route chunks are separate, CSS about 5.1 KB gzipped. No manual chunks or Figma preview plugins required.
 
-## Audit findings
-- No application stack or dependency versions can be confirmed from local code. React 19, strict TypeScript, Vite, Tailwind 4, and React Router are the requested target.
-- Manifest lists App.tsx, main.tsx, MobileApp.tsx, DesktopApp.tsx, data.ts, icons.tsx, index.css, package.json, tsconfig.json, vite.config.ts, four prototype specification/flow documents, and five PNG assets. Contents have not been inspected.
-- Preview confirms separate Mobile App / Desktop Website demonstration controls, ALAGA branding, and a mobile splash screen. Source feature inventory remains pending.
-- Visible Figma change summaries describe a service-first search hero, suggestions, actual-query propagation, results filters, facility cards, and desktop results/map layout. These summaries are evidence of prototype intent, not verification of code behavior or provider data.
-- Attachment requirements, exact colors/typography, reusable components, and existing dependency versions remain unverified.
+## Decisions and limitations
+- No Supabase integration or Vercel deployment yet. Foundation build verification precedes backend work.
+- No verified facility/service/slot data: do not publish prototype providers or fake availability. Booking is unavailable and no patient data is collected.
+- Preserved Health Guide category metadata; excluded unreviewed prototype medical articles.
+- No attachment/upload implementation or requirement found in actual source/specifications. Confirm requirements before adding private storage.
+- Supabase schema, RLS, authentication, secure search, transactional booking/cancellation/rescheduling and persistent private supporting features remain pending.
+- Public healthcare search text stays out of URLs/persistent storage. Guide category URLs carry only category IDs.
 
-## Migration approach (pending source inspection)
-- Inspect the exported source and prototype specifications before implementation.
-- Preserve source tokens, icons, assets, navigation, and resident flows; extract shared components and business logic from desktop/mobile implementations into one responsive layout.
-- Remove the demonstration toggle and phone frame. Review preview dependencies individually.
-- Keep prototype provider/slot data out of production; use honest empty states until verified data exists. Any optional demo data must be explicitly labeled DEMO.
-- Add route-level lazy loading, Suspense, error boundaries, reusable skeletons, and safely superseded/debounced search.
-- Target WCAG 2.2 AA: semantic structure, labeled controls, focus visibility, keyboard support, 44px targets, contrast, 200% zoom/reflow, reduced motion, persistent accessibility preferences, and accessible status/error messages.
-
-## Database and security plan (not implemented)
-- After the foundation build passes, confirm schema for profiles, facilities, services, facility_services, appointment_slots, appointments, notifications, health_articles, and user_preferences.
-- Use UUID keys, foreign keys, verified service relationships, indexes, server timestamps, explicit status transitions, and versioned migrations.
-- Public reads expose only verified public facility/service data; RLS restricts private resident records to their owner. Use Supabase Auth and no browser service-role credentials.
-- Booking/cancellation/rescheduling use transaction-safe protected database operations with slot locking/capacity constraints, authentication, and server validation. Confirm appointments only after successful persistence.
-- Store timestamps with timezone; display and enforce business rules in Asia/Manila.
-- Add private storage and attachment metadata only after inspecting requirements; validate uploads, enforce ownership, and issue expiring signed access.
-- Minimize sensitive collection and exclude patient details from URLs, logs, and analytics. Technical controls alone do not establish Philippine legal compliance.
-
-## Next milestones
-1. Obtain exported Make source, inspect key files/specifications/assets, and finish the stack/feature/component audit.
-2. Implement responsive React + TypeScript + Vite foundation, shared routes/components, accessibility, honest empty states, environment example, and Vercel SPA configuration.
-3. Run type checking, linting, meaningful tests, production build, responsive/keyboard/axe checks, and direct nested-route checks; commit initial implementation on development.
-4. Only then proceed with Supabase migrations, RLS, Auth, secure search, and transactional scheduling.
-5. Add confirmed supporting features; validate database/security behavior, optimize bundles, and deploy when Vercel access is available.
-
-## Blockers and verification
-- Required now: exported Figma Make project ZIP, including source, specifications, configuration, and assets. A screenshot alone is insufficient for the requested source migration.
-- Later: Supabase project URL/public publishable key and authorized migration access, verified facility/service/scheduling records, and Vercel project access/auth redirect configuration. Do not send service-role secrets in chat.
-- No application code, dependency installation, production build, tests, Supabase integration, or deployment has been completed. No initial implementation commit exists yet.
+## Next milestone / required inputs
+1. Supabase project URL/public publishable key and authorized migration access; never browser service-role credentials.
+2. Verified facilities, facility-service relationships and supported scheduling data/policies.
+3. Implement versioned migrations and least-privilege RLS, Auth, deterministic database-backed service/facility matching and transaction-safe booking with Asia/Manila rules.
+4. Validate database/RLS and critical resident flows; complete manual accessibility/security/performance review.
+5. Vercel project access, approved environment/redirect configuration and deployment verification.
