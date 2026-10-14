@@ -6,7 +6,12 @@ let searchQuery = '';
 let currentPage = 'home';
 let selectedCategory = '';
 let authModule;
+let directoryModule;
+let authenticationReady = false;
+let pageChange = 0;
 let firstPage = true;
+const pages = new Map(Array.from(document.querySelectorAll('[data-page]'), page => [page.dataset.page, page]));
+const navigationLinks = document.querySelectorAll('.nav-link, .bottom-link');
 
 showIcons();
 setupPreferences();
@@ -15,7 +20,7 @@ setupGuide();
 
 window.addEventListener('hashchange', showPage);
 document.addEventListener('resident-state-changed', () => {
-  authModule?.showResidentPage(currentPage);
+  if (authenticationReady) authModule.showResidentPage(currentPage);
 });
 
 document.querySelector('.skip-link').addEventListener('click', event => {
@@ -25,19 +30,30 @@ document.querySelector('.skip-link').addEventListener('click', event => {
 
 // Hidden HTML sections act as pages. Hash links support Back/Forward and reloads.
 function showPage() {
+  const change = ++pageChange;
   let route = location.hash.slice(1) || location.pathname.slice(1) || 'home';
+  // Email callbacks may contain auth information after # instead of a page name.
+  // Let Supabase verify it before changing or removing anything from the URL.
+  const fragment = new URLSearchParams(location.hash.slice(1));
+  const query = new URLSearchParams(location.search);
+  if (location.pathname === '/auth/callback' || query.has('code') || query.has('error') ||
+      fragment.has('access_token') || fragment.has('refresh_token') || fragment.has('error') || fragment.has('error_code')) {
+    route = 'auth/callback';
+  }
   if (route === 'main-content') route = currentPage;
   if (route === 'search') route = 'health-centers';
   if (route.startsWith('health-centers/')) route = 'facility';
   if (route.startsWith('appointments/')) route = 'appointments';
   if (route.startsWith('health-guide/')) route = 'health-article';
-  const page = Array.from(document.querySelectorAll('[data-page]')).find(section => section.dataset.page === route);
+  const page = pages.get(route);
+  const previousPage = currentPage;
   currentPage = page ? route : 'not-found';
 
-  document.querySelectorAll('[data-page]').forEach(section => {
-    section.hidden = section.dataset.page !== currentPage;
-  });
-  document.querySelectorAll('.nav-link, .bottom-link').forEach(link => {
+  if (firstPage || previousPage !== currentPage) {
+    pages.get(previousPage).hidden = true;
+    pages.get(currentPage).hidden = false;
+  }
+  navigationLinks.forEach(link => {
     const active = link.getAttribute('href') === '#' + currentPage;
     link.classList.toggle('active', active);
     if (active) link.setAttribute('aria-current', 'page');
@@ -51,9 +67,20 @@ function showPage() {
   if (!firstPage) heading.focus({ preventScroll: true });
   firstPage = false;
 
+  if (currentPage === 'health-centers') {
+    import('./directory.js').then(module => {
+      directoryModule = module;
+      if (change === pageChange) module.showDirectory(searchQuery);
+    }).catch(() => {
+      document.getElementById('directory-error').textContent = 'The directory could not load. Reload the page to try again.';
+    });
+  } else directoryModule?.cancelDirectory();
+
   const residentPage = ['profile', 'appointments', 'notifications'].includes(currentPage);
   if (residentPage || currentPage.startsWith('auth/')) {
-    loadAuthentication().then(module => module.showResidentPage(currentPage)).catch(() => {
+    loadAuthentication().then(module => {
+      if (change === pageChange) module.showResidentPage(currentPage);
+    }).catch(() => {
       document.querySelectorAll('[data-resident-gate]').forEach(gate => {
         gate.textContent = 'Account services could not load. Reload the page to try again.';
         gate.setAttribute('role', 'alert');
@@ -70,6 +97,7 @@ async function loadAuthentication() {
     authModule = await import('./auth.js');
   }
   await authModule.startAuthentication();
+  authenticationReady = true;
   return authModule;
 }
 
@@ -78,11 +106,10 @@ function search(query) {
   if (!searchQuery) return;
   document.getElementById('directory-query').value = searchQuery;
   document.getElementById('directory-title').textContent = 'Results for “' + searchQuery + '”';
-  document.getElementById('directory-description').textContent = 'Your search has been received. Facility data is not yet connected, so ALAGA cannot verify matches.';
   document.getElementById('clear-search').hidden = false;
   document.getElementById('search-suggestions').hidden = true;
-  location.hash = 'search';
-  showPage();
+  if (location.hash === '#search') showPage();
+  else location.hash = 'search';
 }
 
 function setupSearch() {
@@ -99,7 +126,7 @@ function setupSearch() {
     searchQuery = '';
     document.getElementById('directory-query').value = '';
     document.getElementById('directory-title').textContent = 'Find a Health Center';
-    document.getElementById('directory-description').textContent = 'ALAGA is preparing its verified facility directory.';
+    document.getElementById('directory-city').value = '';
     document.getElementById('clear-search').hidden = true;
     location.hash = 'home';
   });

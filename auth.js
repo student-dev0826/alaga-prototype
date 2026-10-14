@@ -8,7 +8,11 @@ let residentVersion = 0;
 let request;
 let notificationsPage = 0;
 let profileCache;
+let renderedAuthState = '';
 const notificationsCache = new Map();
+// Keep only whether the provider reported a failure, never its tokens or message.
+const callbackFailed = [new URLSearchParams(location.search), new URLSearchParams(location.hash.slice(1))]
+  .some(parameters => parameters.has('error') || parameters.has('error_code'));
 
 export function startAuthentication() {
   starting ??= initialize();
@@ -49,6 +53,8 @@ async function initialize() {
 }
 
 function setResident(user, recovering) {
+  const changed = status !== 'ready' || resident?.id !== user?.id || resident?.email !== user?.email ||
+    (!!user && recovering && !recoverySession);
   if (resident?.id !== user?.id) {
     residentVersion += 1;
     recoverySession = false;
@@ -65,11 +71,16 @@ function setResident(user, recovering) {
   resident = user;
   status = 'ready';
   recoverySession = user ? recovering || recoverySession : false;
+  // Token refreshes for the same resident must not reset an edited profile form.
+  if (!changed) return;
   updateAuthentication();
   document.dispatchEvent(new Event('resident-state-changed'));
 }
 
 function updateAuthentication() {
+  const state = [status, resident?.id || '', recoverySession].join(':');
+  if (state === renderedAuthState) return;
+  renderedAuthState = state;
   document.querySelectorAll('[data-resident-gate]').forEach(gate => {
     gate.removeAttribute('role');
     gate.hidden = !!resident && status === 'ready';
@@ -101,7 +112,7 @@ export function showResidentPage(page) {
   if (page === 'auth/callback') {
     if (status === 'loading') return;
     history.replaceState(null, '', '/#auth/callback');
-    if (resident) location.hash = recoverySession ? 'auth/update-password' : 'profile';
+    if (resident && !callbackFailed && status === 'ready') location.hash = recoverySession ? 'auth/update-password' : 'profile';
     else document.getElementById('callback-status').textContent = 'This link could not be verified. It may have expired or was opened in another browser.';
   }
   if (!resident || status !== 'ready') return;
@@ -139,7 +150,8 @@ function validateForm(form, newPassword = false) {
 function safeError(error) {
   if (['invalid_credentials', 'invalid_login_credentials'].includes(error?.code)) return 'Email or password is incorrect. Please check both and try again.';
   if (error?.code === 'email_not_confirmed') return 'Confirm your email address using the link we sent before signing in.';
-  if (['over_request_rate_limit', 'over_email_send_rate_limit'].includes(error?.code)) return 'Too many attempts. Please wait a few minutes before trying again.';
+  if (error?.code === 'over_email_send_rate_limit') return 'Email sending is temporarily limited. Wait for the email limit to reset before requesting another link. Repeated requests will not resolve this.';
+  if (error?.code === 'over_request_rate_limit') return 'Too many attempts. Please wait before trying again.';
   if (error?.code === 'weak_password') return 'Choose a stronger password and try again.';
   return 'The request could not be completed. Check your connection and try again.';
 }

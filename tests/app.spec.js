@@ -1,9 +1,42 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/rest/v1/rpc/search_facilities', route => route.fulfill({
+    json: { total: 0, matched_services: [], items: [] },
+  }));
+});
+
+test('directory retries failures and sends private search text in POST body only', async ({ page }) => {
+  let fail = true;
+  const searches = [];
+  await page.route('**/rest/v1/rpc/search_facilities', route => {
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().url()).not.toContain('dialysis');
+    searches.push(route.request().postDataJSON());
+    return route.fulfill(fail ? { status: 503 } : { json: {
+      total: 1, matched_services: ['Dialysis'], items: [{ id: 'demo', name: '<img src=x onerror=alert(1)> DEMO', address: 'DEMO Address', city: 'DEMO City', phone: null, operating_hours: null, services: ['Dialysis'] }],
+    } });
+  });
+  await page.goto('/');
+  await page.locator('#home-query').fill('I need dialysis');
+  await page.locator('#home-query').press('Enter');
+  await expect(page.locator('#directory-error')).toContainText('could not load');
+  fail = false;
+  await page.locator('#retry-directory').click();
+  await expect(page.locator('#directory-results')).toContainText('DEMO');
+  await expect(page.locator('#directory-results img')).toHaveCount(0);
+  expect(searches[0].p_query).toBe('I need dialysis');
+  await page.locator('#directory-city').fill('DEMO City');
+  await page.getByRole('button', { name: 'Apply location' }).click();
+  await expect.poll(() => searches.at(-1).p_city).toBe('DEMO City');
+  expect(page.url()).not.toContain('dialysis');
+});
+
 // Only browser tests replace the backend SDK. No test sends real email or creates accounts.
-async function mockAccounts(page, signedIn = false) {
+async function mockAccounts(page, signedIn = false, recovering = false) {
   await page.addInitScript(value => { window.testSignedIn = value; }, signedIn);
+  await page.addInitScript(value => { window.testRecovering = value; }, recovering);
   await page.route('**/assets/dist-*.js', route => route.fulfill({
     contentType: 'application/javascript',
     body: `export function createClient() {
@@ -14,10 +47,13 @@ async function mockAccounts(page, signedIn = false) {
       return {
         auth: {
           onAuthStateChange(callback) { listener = callback; },
-          async getSession() { return result(); },
+          async getSession() {
+            if (window.testRecovering) listener('PASSWORD_RECOVERY', { user });
+            return result();
+          },
           async signInWithPassword() { return { error: { code: 'invalid_credentials' } }; },
           async signUp() { return result(); },
-          async resetPasswordForEmail() { return { error: null }; },
+          async resetPasswordForEmail() { return { error: window.testEmailLimit ? { code: 'over_email_send_rate_limit' } : null }; },
           async updateUser() { return { error: null }; },
           async signOut() { window.testAuthEvent('SIGNED_OUT', null); return { error: null }; },
         },
@@ -28,6 +64,7 @@ async function mockAccounts(page, signedIn = false) {
             range() { return query; }, abortSignal() { return query; },
             update(value) { change = value; return query; },
             async single() {
+              if (table === 'profiles' && !change) window.profileReads = (window.profileReads || 0) + 1;
               if (window.delayProfileSave && change) await new Promise(resolve => { window.finishProfileSave = resolve; });
               return { data: { id: 'demo-resident', display_name: change?.display_name || 'DEMO Resident' }, error: null };
             },
@@ -75,6 +112,43 @@ test('preferences persist, categories work, and keyboard skip link works', async
   await page.goto('/#health-guide');
   await page.locator('#guide-query').fill('does not exist');
   await expect(page.locator('#guide-search-status')).toContainText('No categories match');
+});
+
+test('session refresh preserves unsaved profile edits and avoids duplicate reads', async ({ page }) => {
+  await mockAccounts(page, true);
+  await page.goto('/#profile');
+  await expect(page.locator('#display-name')).toHaveValue('DEMO Resident');
+  expect(await page.evaluate(() => window.profileReads)).toBe(1);
+  await page.locator('#display-name').fill('Unsaved DEMO name');
+  await page.evaluate(() => window.testAuthEvent('TOKEN_REFRESHED', { id: 'demo-resident', email: 'demo@example.test' }));
+  await expect(page.locator('#display-name')).toHaveValue('Unsaved DEMO name');
+  expect(await page.evaluate(() => window.profileReads)).toBe(1);
+});
+
+test('email throttling explains the limit without promising a short wait', async ({ page }) => {
+  await mockAccounts(page);
+  await page.goto('/#auth/recover');
+  await page.evaluate(() => { window.testEmailLimit = true; });
+  await page.locator('#recover-email').fill('demo@example.test');
+  await page.locator('#recover-form button').click();
+  await expect(page.locator('#recover-form [data-form-error]')).toContainText('Wait for the email limit to reset');
+  await expect(page.locator('#recover-form [data-form-message]')).toBeEmpty();
+});
+
+test('expired email callback shows recovery guidance instead of page not found', async ({ page }) => {
+  await mockAccounts(page, true);
+  await page.goto('/auth/callback#error=access_denied&error_code=otp_expired');
+  await expect(page.locator('#callback-status')).toContainText('may have expired');
+  await expect(page).toHaveURL('http://127.0.0.1:5173/#auth/callback');
+  await expect(page.locator('[data-page="not-found"]')).toBeHidden();
+  await expect(page.locator('#password-form')).toBeHidden();
+});
+
+test('verified recovery callback opens password form and removes callback parameters', async ({ page }) => {
+  await mockAccounts(page, true, true);
+  await page.goto('/auth/callback?code=demo-code-for-mocked-sdk#type=recovery');
+  await expect(page.locator('#password-form')).toBeVisible();
+  await expect(page).toHaveURL('http://127.0.0.1:5173/#auth/update-password');
 });
 
 test('public and signed-out pages have no detected axe AA violations', async ({ page }) => {
