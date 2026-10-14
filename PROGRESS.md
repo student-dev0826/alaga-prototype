@@ -3,6 +3,7 @@
 Updated: 2026-10-14 (Asia/Manila)
 
 ## Current application
+- Search milestone: applied 202610140002_facility_search.sql to the authorized cloud project after checking function names were unused. Public search respects caller RLS and matches verified service names/synonyms plus simple request phrases; facility-name search, exact city filtering, stable 12-result pagination, verified service/contact cards, bounded memory caching, abort/timeout, skeleton and retry states are connected. Query text uses POST bodies rather than URLs. No new dependencies. Live API returned HTTP 200 with zero verified facilities; anonymous private-profile reads still denied. Nine database tests and 13 browser tests passed along with lint/build. No provider records were inserted.
 - Cleanup milestone: pruned 41 unused installed packages and removed their lockfile entries; all remaining direct packages are used. Cached static page elements, removed duplicate search navigation/profile reads, avoided rebuilding unchanged auth UI and prevented same-account token refresh from overwriting unsaved profile edits. Corrected email-limit guidance. Lint/build and 12 browser checks passed; application remains plain HTML/CSS/JavaScript with lazy account code.
 - Live checks reported by the user: signup email/confirmation, profile loading, profile save after refresh, and sign-out/sign-in with saved name all worked. Recovery email redirected to Page not found; fixed callback routing so auth fragments reach verification, provider errors show a fresh-link option, and existing sessions cannot mask failed links. Lint/build and three targeted mocked browser tests passed. Live recovery completion and two-account cloud isolation remain pending.
 - Plain HTML/CSS/JavaScript is the only current implementation, promoted to the repository root at the user's request. Removed duplicate React source, its tests/tooling and dependencies; preserved database migrations, environment files and screenshots. Main uses npm run build with dist output. Clean installation, lint, production build, six PostgreSQL/RLS tests and eight browser tests passed after promotion.
@@ -24,7 +25,7 @@ Updated: 2026-10-14 (Asia/Manila)
 
 ## Decisions / limits
 - No verified production providers, facility-service relationships, slots or medical articles are inserted. No seed records or simulated booking success.
-- Direct client slot/appointment writes are denied. Transactional booking, cancellation/rescheduling policies, database-backed search and history remain the next phase.
+- Direct client slot/appointment writes are denied. Transactional booking, cancellation/rescheduling policies, availability and history remain the next phase.
 - No attachment/upload requirement found in actual source/specifications; storage remains deferred.
 - Supabase migration was manually applied, not registered in the CLI ledger. Mark version 202610140001 applied with the authorized CLI repair workflow before a later db push; do not re-run the table-creation SQL. See docs/SUPABASE-SETUP.md.
 - The plain JavaScript app uses the versioned SQL schema; obsolete TypeScript definitions were removed with the React implementation.
@@ -33,7 +34,7 @@ Updated: 2026-10-14 (Asia/Manila)
 
 ## Next work
 1. Finish live recovery/password-change verification and two-account cloud RLS checks using authorized test accounts. Signup, confirmation, profile persistence and login/logout have user-reported success.
-2. Deterministic verified-service/facility search with pagination/filtering and real availability.
+2. Add verified provider/service records from an authorized source; expand facility details and connect actual availability. Database search and city filtering are now connected; map/nearest sorting remain pending.
 3. Protected transactional booking/cancellation/rescheduling with slot locking/capacity constraints, approved policies and Asia/Manila rules.
 4. Verified provider/scheduling data, persistent supporting features and confirmed attachment requirements.
 5. Manual accessibility/security/performance checks and authorized Vercel deployment verification.

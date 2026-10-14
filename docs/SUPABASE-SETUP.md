@@ -32,6 +32,8 @@ Auth tests explicitly mock provider responses to verify validation, rejected log
 
 ## Security boundaries and next phase
 
+Search migration `202610140002_facility_search.sql` was applied through the SQL Editor after verifying its function names were unused. Its functions use caller permissions (`security invoker`) and existing RLS; only public verified facility/service fields are returned. Search parameters travel in a POST body. Live anonymous search returned HTTP 200 and zero records. No production provider/slot data was inserted. This migration, like the foundation migration, is not registered in the CLI ledger; repair both applied versions before a later CLI database push.
+
 - Private data is owner-only. Clients cannot verify facilities or create/alter slots/appointments. Updates are limited to profile display name, presentation preferences and notification read state. Notification read timestamps are normalized by the server.
 - Supabase owns session persistence/refresh; passwords are never manually stored. SDK imports are dynamic. The production build rejects privileged browser keys; the build guard was tested with a synthetic secret key. Timeouts and abortable queries bound loading. Private cache keys include resident ID; caches clear on account changes/logout.
 - Callback codes are removed from browser history after initialization. Errors are sanitized; patient details are not logged or placed in URLs.

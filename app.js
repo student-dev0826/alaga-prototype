@@ -6,6 +6,7 @@ let searchQuery = '';
 let currentPage = 'home';
 let selectedCategory = '';
 let authModule;
+let directoryModule;
 let authenticationReady = false;
 let pageChange = 0;
 let firstPage = true;
@@ -66,6 +67,15 @@ function showPage() {
   if (!firstPage) heading.focus({ preventScroll: true });
   firstPage = false;
 
+  if (currentPage === 'health-centers') {
+    import('./directory.js').then(module => {
+      directoryModule = module;
+      if (change === pageChange) module.showDirectory(searchQuery);
+    }).catch(() => {
+      document.getElementById('directory-error').textContent = 'The directory could not load. Reload the page to try again.';
+    });
+  } else directoryModule?.cancelDirectory();
+
   const residentPage = ['profile', 'appointments', 'notifications'].includes(currentPage);
   if (residentPage || currentPage.startsWith('auth/')) {
     loadAuthentication().then(module => {
@@ -96,7 +106,6 @@ function search(query) {
   if (!searchQuery) return;
   document.getElementById('directory-query').value = searchQuery;
   document.getElementById('directory-title').textContent = 'Results for “' + searchQuery + '”';
-  document.getElementById('directory-description').textContent = 'Your search has been received. Facility data is not yet connected, so ALAGA cannot verify matches.';
   document.getElementById('clear-search').hidden = false;
   document.getElementById('search-suggestions').hidden = true;
   if (location.hash === '#search') showPage();
@@ -117,7 +126,7 @@ function setupSearch() {
     searchQuery = '';
     document.getElementById('directory-query').value = '';
     document.getElementById('directory-title').textContent = 'Find a Health Center';
-    document.getElementById('directory-description').textContent = 'ALAGA is preparing its verified facility directory.';
+    document.getElementById('directory-city').value = '';
     document.getElementById('clear-search').hidden = true;
     location.hash = 'home';
   });

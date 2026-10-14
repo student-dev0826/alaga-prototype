@@ -233,4 +233,6 @@ input, select { font: inherit; }
 .loading-lines { min-height: 12rem; }
 .loading-line { height: 1.25rem; border-radius: .5rem; background: #e5e7eb; margin: 1rem 0; }
 .loading-line.short { width: 60%; }
+.facility-card { display: grid; gap: .75rem; overflow-wrap: anywhere; }
+.facility-card summary { cursor: pointer; min-height: 44px; display: list-item; padding: .65rem 0; }
 

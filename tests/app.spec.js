@@ -1,6 +1,38 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/rest/v1/rpc/search_facilities', route => route.fulfill({
+    json: { total: 0, matched_services: [], items: [] },
+  }));
+});
+
+test('directory retries failures and sends private search text in POST body only', async ({ page }) => {
+  let fail = true;
+  const searches = [];
+  await page.route('**/rest/v1/rpc/search_facilities', route => {
+    expect(route.request().method()).toBe('POST');
+    expect(route.request().url()).not.toContain('dialysis');
+    searches.push(route.request().postDataJSON());
+    return route.fulfill(fail ? { status: 503 } : { json: {
+      total: 1, matched_services: ['Dialysis'], items: [{ id: 'demo', name: '<img src=x onerror=alert(1)> DEMO', address: 'DEMO Address', city: 'DEMO City', phone: null, operating_hours: null, services: ['Dialysis'] }],
+    } });
+  });
+  await page.goto('/');
+  await page.locator('#home-query').fill('I need dialysis');
+  await page.locator('#home-query').press('Enter');
+  await expect(page.locator('#directory-error')).toContainText('could not load');
+  fail = false;
+  await page.locator('#retry-directory').click();
+  await expect(page.locator('#directory-results')).toContainText('DEMO');
+  await expect(page.locator('#directory-results img')).toHaveCount(0);
+  expect(searches[0].p_query).toBe('I need dialysis');
+  await page.locator('#directory-city').fill('DEMO City');
+  await page.getByRole('button', { name: 'Apply location' }).click();
+  await expect.poll(() => searches.at(-1).p_city).toBe('DEMO City');
+  expect(page.url()).not.toContain('dialysis');
+});
+
 // Only browser tests replace the backend SDK. No test sends real email or creates accounts.
 async function mockAccounts(page, signedIn = false, recovering = false) {
   await page.addInitScript(value => { window.testSignedIn = value; }, signedIn);

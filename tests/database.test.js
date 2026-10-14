@@ -17,6 +17,7 @@ beforeAll(async () => {
     grant usage on schema auth to anon, authenticated; grant execute on function auth.uid() to anon, authenticated;
     insert into auth.users values ('${alice}');`);
   await db.exec(await readFile('supabase/migrations/202610140001_foundation.sql', 'utf8'));
+  await db.exec(await readFile('supabase/migrations/202610140002_facility_search.sql', 'utf8'));
   await db.exec(`insert into auth.users values ('${bob}');
     insert into public.facilities(id,name,address,city,is_verified,verified_at,booking_enabled) values ('${facility}','DEMO Verified Facility','DEMO Address','DEMO City',true,now(),true);
     insert into public.facilities(name,address,city) values ('DEMO Hidden Facility','DEMO Address','DEMO City');
@@ -32,6 +33,45 @@ afterAll(async () => { await db?.close(); });
 beforeEach(async () => { await db.exec(`reset role; select set_config('request.jwt.claim.sub', '${alice}', false);`); });
 async function rows(sql) { return (await db.query(sql)).rows; }
 describe('actual PostgreSQL migration and RLS behavior', () => {
+  it('searches verified service synonyms and natural phrases without mixing dialysis services', async () => {
+    await db.exec('begin');
+    try {
+      await db.exec(`update public.services set name='Dialysis', synonyms=array['renal treatment'] where id='${service}'; set role anon;`);
+      for (const query of ['Dialysis', 'I need dialysis', 'Dialysis near me', 'I want to get renal treatment']) {
+        const result = (await db.query('select public.search_facilities($1) as result', [query])).rows[0].result;
+        expect(result.total).toBe(1);
+        expect(result.items[0].id).toBe(facility);
+        expect(result.matched_services).toEqual(['Dialysis']);
+      }
+      const unrelated = (await db.query("select public.search_facilities('dialysis consultation') as result")).rows[0].result;
+      expect(unrelated.total).toBe(0);
+      await db.exec(`reset role; update public.facility_services set is_verified=false where id='${relationship}'; set role anon;`);
+      expect((await db.query("select public.search_facilities('dialysis') as result")).rows[0].result.total).toBe(0);
+    } finally { await db.exec('rollback'); }
+  });
+
+  it('filters names and cities, hides unverified records and rejects invalid search inputs', async () => {
+    await db.exec('set role anon');
+    const result = (await db.query("select public.search_facilities('DEMO Verified', 'demo city') as result")).rows[0].result;
+    expect(result.total).toBe(1);
+    expect(result.items[0].services).toEqual(['DEMO Service']);
+    expect((await db.query("select public.search_facilities('DEMO Hidden') as result")).rows[0].result.total).toBe(0);
+    expect((await db.query("select public.search_facilities('', 'Other City') as result")).rows[0].result.total).toBe(0);
+    expect((await db.query("select public.search_facilities('%') as result")).rows[0].result.total).toBe(0);
+    await expect(db.query("select public.search_facilities('', '', -1)")).rejects.toMatchObject({ code: '22023' });
+    await expect(db.query('select public.search_facilities($1)', ['x'.repeat(201)])).rejects.toMatchObject({ code: '22023' });
+  });
+
+  it('paginates verified facilities in stable alphabetical order', async () => {
+    await db.exec('begin');
+    try {
+      await db.exec("insert into public.facilities(name,address,city,is_verified,verified_at) select 'DEMO Page ' || lpad(n::text,2,'0'),'DEMO Address','DEMO City',true,now() from generate_series(1,13) n; set role anon;");
+      const first = (await db.query("select public.search_facilities('DEMO Page') as result")).rows[0].result;
+      const second = (await db.query("select public.search_facilities('DEMO Page','',12) as result")).rows[0].result;
+      expect(first.total).toBe(13); expect(first.items).toHaveLength(12);
+      expect(second.items).toHaveLength(1); expect(second.items[0].name).toBe('DEMO Page 13');
+    } finally { await db.exec('rollback'); }
+  });
   it('creates resident records for existing and new auth users', async () => {
     expect(await rows('select id from public.profiles')).toHaveLength(2);
     expect(await rows('select user_id from public.user_preferences')).toHaveLength(2);

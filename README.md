@@ -36,7 +36,7 @@ Production files are generated in `dist`. Hash navigation supports reloads and B
 
 ## Current scope
 
-Responsive navigation, search interface, Health Guide categories, accessibility settings, resident authentication, private profiles and notifications are implemented. Database schema/RLS is applied to the authorized Supabase project. Verified provider records, service matching, slots, transactional booking and reviewed medical articles remain pending; there are no simulated appointments. Live email flows and manual screen-reader verification are pending.
+Responsive navigation, database-backed service/facility search with city filtering and pagination, Health Guide categories, accessibility settings, resident authentication, private profiles and notifications are implemented. Search uses only verified records and relationships; simple phrases match stored service names/synonyms without assuming related treatments are interchangeable. Database schema/RLS and the search migration are applied to the authorized Supabase project. Verified provider records, actual availability, transactional booking and reviewed medical articles remain pending; there are no simulated appointments. Live recovery and manual screen-reader verification are pending.
 
 Browser tests cover responsive layouts, keyboard navigation, enlarged text, preference persistence, axe AA scans and mocked account privacy. Database tests execute the migration and RLS against local PostgreSQL. Mocked account checks are not live email verification. See [progress](PROGRESS.md), [source audit](docs/SOURCE-AUDIT.md) and [Supabase setup](docs/SUPABASE-SETUP.md).
 
